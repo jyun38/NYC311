@@ -1,0 +1,201 @@
+---
+title: "FP2"
+author: "Ji Young Yun"
+date: "11/29/2016"
+output: html_document
+---
+#### Data
+```{r}
+nyc311_2015_1 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_1.csv")
+nyc311_2015_2 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_2.csv")
+nyc311_2015_3 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_3.csv")
+nyc311_2015_4 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_4.csv")
+nyc311_2015_5 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_5.csv")
+nyc311_2015_6 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_6.csv")
+nyc311_2015_7 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_7.csv")
+nyc311_2015_8 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_8.csv")
+nyc311_2015_9 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_9.csv")
+nyc311_2015_10 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_10.csv")
+nyc311_2015_11<- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_11.csv")
+nyc311_2015_12 <- read.csv("~/Desktop/FALL2016/SDS293/Project/nyc311_2015_12.csv")
+  
+```
+
+#### Create "time spent" column (1)
+```{r}
+class(nyc311_2015_1$created_date)
+
+nyc311_2015_1 <- nyc311_2015_1 %>%
+  mutate(created_date = gsub("/" , "-", created_date)) %>%
+  mutate(created_date = as.POSIXct(created_date,origin = "1970-01-01")) %>%
+  mutate(resolution_action_updated_date = gsub("/" , "-", resolution_action_updated_date)) %>%
+  mutate(resolution_action_updated_date = as.POSIXct(resolution_action_updated_date,origin = "1970-01-01"))
+
+nyc311_2015_1<- nyc311_2015_1%>%
+  mutate(time_spent =
+           (resolution_action_updated_date -
+              created_date)) %>%
+  filter(time_spent >= 0) %>%
+  mutate(hours_spent = as.numeric(time_spent/3600)) %>%
+  mutate(days_spent = as.numeric(hours_spent/24))%>%
+  mutate(long = ifelse(days_spent >= 30, "T", "F"))
+
+mean(nyc311_2015_1$hours_spent)
+mean(nyc311_2015_1$days_spent)
+```
+#### Create "time spent" column (2)
+```{r}
+class(nyc311_2015_2$created_date)
+nyc311_2015_2 <- nyc311_2015_2 %>%
+  mutate(created_date = gsub("/" , "-", created_date)) %>%
+  mutate(created_date = as.POSIXct(created_date,origin = "1970-01-01")) %>%
+  mutate(resolution_action_updated_date = gsub("/" , "-", resolution_action_updated_date)) %>%
+  mutate(resolution_action_updated_date = as.POSIXct(resolution_action_updated_date,origin = "1970-01-01"))
+
+nyc311_2015_2<- nyc311_2015_2%>%
+  mutate(time_spent =
+           (resolution_action_updated_date -
+              created_date)) %>%
+  filter(time_spent >= 0) %>%
+  mutate(hours_spent = as.numeric(time_spent/3600)) %>%
+  mutate(days_spent = as.numeric(hours_spent/24))%>%
+  mutate(long = ifelse(days_spent >= 30, "T", "F"))
+
+mean(nyc311_2015_2$hours_spent)
+mean(nyc311_2015_2$days_spent)
+```
+
+####Analysis (1)
+```{r}
+library(graphics)
+library(tree)
+hist(nyc311_2015_1$hours_spent, data = nyc311_2015_1)
+
+
+tree1 <- tree(long ~ agency+borough+longitude+latitude, data = nyc311_2015_1)
+
+# complaint_type > 2000 
+complaint <- nyc311_2015_1 %>%
+  group_by(complaint_type) %>%
+  summarise(N = n())%>%
+  arrange(desc(N))%>%
+  head(30)
+#we want to focus on the 20 most comoonly occurred complaint_type
+
+nyc311_2015_1 <- nyc311_2015_1 %>%
+  group_by(complaint_type) %>%
+  mutate(N = n())%>%
+  filter(N > 5000)%>%
+  select(-N)
+
+complaint_1 <- nyc311_2015_1_1 %>%
+  group_by(complaint_type) %>%
+  summarise(N = n())%>%
+  arrange(desc(N))
+
+sub1 <- regsubsets()
+
+```
+
+```{r}
+mod = glm(hours_spent ~ complaint_type+agency_name + borough, data=nyc311_2015_1)
+summary(mod)
+```
+
+```{r}
+####################################################################
+#DATE VARIABLES PROBLEM
+class(nyc311_2015_1$created_date)
+nyc311_2015_1 <- nyc311_2015_1 %>%
+  mutate(created_date = gsub("/" , "-", created_date)) %>%
+  mutate(created_date = as.POSIXct(created_date,origin = "1970-01-01")) %>%
+  mutate(resolution_action_updated_date = gsub("/" , "-", resolution_action_updated_date)) %>%
+  mutate(resolution_action_updated_date = as.POSIXct(resolution_action_updated_date,origin = "1970-01-01"))
+
+nyc311_2015_1<- nyc311_2015_1%>%
+  mutate(time_spent =
+           (resolution_action_updated_date -
+              created_date)) %>%
+  filter(time_spent >= 0) %>%
+  mutate(hours_spent = as.numeric(time_spent/3600)) %>%
+  mutate(days_spent = as.numeric(hours_spent/24)) %>%
+  mutate(long = ifelse(days_spent >= 30, "T", "F"))
+  
+mean(nyc311_2015_1$hours_spent)
+mean(nyc311_2015_1$days_spent)
+max(nyc311_2015_1$hours_spent)
+max(nyc311_2015_1$days_spent)
+class(nyc311_2015_1$days_spent)
+
+###########################################################################
+#CATEGORICAL VARIABLE PROBLEM
+library(graphics)
+library(tree)
+hist(nyc311_2015_1$hours_spent, data = nyc311_2015_1)
+# complaint_type frequency > 2000 
+complaint <- nyc311_2015_1 %>%
+  group_by(complaint_type) %>%
+  summarise(N = n())%>%
+  arrange(desc(N))%>%
+  head(30)
+
+#we want to focus on the 20 most comoonly occurred complaint_type
+nyc311_2015_1_1 <- nyc311_2015_1 %>%
+  group_by(complaint_type) %>%
+  mutate(N = n())%>%
+  filter(N > 10000) %>%
+  select(-N)
+
+#complaint_1 <- nyc311_2015_1_1 %>%
+#  group_by(complaint_type) %>%
+#  summarise(N = n())%>%
+#  arrange(desc(N))
+nyc311_2015_1_1$long = as.factor(nyc311_2015_1_1$long)
+
+complaint_2 <- nyc311_2015_1_1 %>%
+  mutate(ccomplaint_grouped = complaint_type) %>%
+  group_by(ccomplaint_grouped) %>%
+  summarise(N = n())%>%
+  arrange(desc(N))
+  
+set.seed(1)
+#Test and Train Datasets
+train = nyc311_2015_1_1 %>%
+  sample_n(200)
+test = nyc311_2015_1_1 %>%
+  setdiff(train)
+
+train%>%
+  group_by(agency)%>%
+  summarise(N = n())
+
+train%>%
+  filter(agency == "DOT")
+
+#Regression
+linear_model <- glm(days_spent ~ complaint_type + address_type + agency + borough + latitude + longitude , data = train)
+summary(linear_model)
+library(leaps)
+linear_model_sub <- regsubsets(days_spent ~ complaint_type + address_type + borough + latitude + longitude , really.big=T, data = train)
+summary(linear_model)
+
+#Tree
+tree <- tree(long ~ address_type + agency + borough + latitude + longitude , data = train)
+plot(tree)
+summary(tree)
+summary(nyc311_2015_1_1)
+
+text(tree, pretty = 0)
+summary(tree)
+
+
+class(nyc311_2015_1_1$complaint_type)
+class(nyc311_2015_1_1$agency)
+class(nyc311_2015_1_1$borough)
+class(nyc311_2015_1_1$longitude)
+class(nyc311_2015_1_1$long)
+
+summary(nyc311_2015_1_1)
+
+```
+
